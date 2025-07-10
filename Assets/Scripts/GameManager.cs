@@ -7,7 +7,10 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    
+    [Header("Level System")]
+    public LevelDatabase levelDatabase;
+    public int currentLevelIndex = 0;
+    private LevelData currentLevel;
     [Header("Word Management")]
     public List<WordData> availableWords; // מילים שיצרנו מראש
     public WordData currentWord;
@@ -18,6 +21,8 @@ public class GameManager : MonoBehaviour
     public Transform[] usedLetterSpawnPoints;
     public Image currentDisplayedWord; // משויך דרך ה-Inspector
     public Image successImage;
+    public Transform startingLocation;
+    public GameObject Player;
     public static GameManager Instance { get; private set; }
     void Awake()
     {
@@ -31,16 +36,49 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
         StartGame();
-        successImage.enabled = false;
+        
     }
 
    
     public void StartGame()
     {
         Debug.Log("המשחק התחיל!");
-        LoadRandomWord();
+        startingLocation.transform.position = Player.transform.position;
+        successImage.enabled = false;
+        LoadLevel(currentLevelIndex);
     }
 
+    private void LoadLevel(int index)
+    {
+        Player.transform.position = startingLocation.transform.position;
+        successImage.enabled = false;
+        if (levelDatabase == null || levelDatabase.levels.Count == 0)
+        {
+            Debug.LogWarning("לא מוגדרת רשימת שלבים!");
+            return;
+        }
+
+        if (index < 0 || index >= levelDatabase.levels.Count)
+        {
+            Debug.LogWarning("אינדקס שלב לא תקני!");
+            return;
+        }
+
+        currentLevel = levelDatabase.levels[index];
+        currentWord = currentLevel.wordData;
+
+        if (currentDisplayedWord != null && currentWord.wordSprite != null)
+        {
+            currentDisplayedWord.sprite = currentWord.wordSprite;
+        }
+        else
+        {
+            Debug.LogWarning("חסר חיבור לתמונה או שאין תמונה למילה");
+        }
+
+        StartNewLevel(currentWord);
+    }
+    /*
     public void LoadRandomWord()
     {
         Debug.Log(" בוחרים מילה רנדומלית");
@@ -60,6 +98,7 @@ public class GameManager : MonoBehaviour
             Debug.LogWarning("חסר חיבור לתמונה או שאין תמונה למילה");
         }
     }
+    */
     private List<Sprite> collectedSprites = new();
 
     public void StartNewLevel(WordData word)
@@ -178,7 +217,7 @@ public class GameManager : MonoBehaviour
                 if (IsWordComplete())
                 {
                     Debug.Log(" השלמת את המילה: " + currentWord.wordName);
-                    successImage.enabled = true;
+                    FinishedLevel(1.5f);
                     // בהמשך נוכל לעשות כאן מעבר שלב או להציג UI
                 }
             }
@@ -188,7 +227,7 @@ public class GameManager : MonoBehaviour
             Debug.Log(" זאת לא אות נכונה: " + letterSprite.name);
         }
     }
-
+   
     private bool IsWordComplete()
     {
         foreach (var sprite in currentWord.letterSprites)
@@ -197,6 +236,30 @@ public class GameManager : MonoBehaviour
                 return false;
         }
         return true;
+    }
+    public void FinishedLevel(float delay)
+    {
+        successImage.enabled = true;
+        if(collectedSprites != null)
+        {
+            collectedSprites.Clear();
+        }
+        currentLevelIndex++;
+        if(currentLevelIndex >= levelDatabase.levels.Count)
+        {
+            Debug.Log("no more levels");
+        }
+        else
+        {
+            StartCoroutine(LoadNextLevelAfterDelay(delay));
+        }
+        
+
+    }
+    private IEnumerator LoadNextLevelAfterDelay(float delay)
+    {
+            yield return new WaitForSeconds(delay);
+            LoadLevel(currentLevelIndex);        
     }
 
 }
