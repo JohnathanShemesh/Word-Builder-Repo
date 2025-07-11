@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Platform
   - Ground
+  - Letter
   layers:
   - Default
   - TransparentFX

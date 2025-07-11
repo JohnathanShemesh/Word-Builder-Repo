@@ -8,16 +8,22 @@ public class Movement : MonoBehaviour
     public float jumpForce = 10f;
 
     private Rigidbody2D rb;
-
+    public Animator animator;
     public Transform raycastOrigin;
+    public BoxCollider2D boxCollider;
     public float rayLength = 0.5f;
     public LayerMask groundLayer;
-
     private bool isGrounded;
+    private Vector2 originalColliderSize;
+    private Vector2 originalColliderOffset;
 
     void Start()
-    {
+    {            
+        boxCollider = GetComponent<BoxCollider2D>();
+        originalColliderSize = boxCollider.size;
+        originalColliderOffset = boxCollider.offset;
         rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
         if (raycastOrigin == null)
             Debug.LogError("raycastOrigin לא הוגדר!");
     }
@@ -26,6 +32,15 @@ public class Movement : MonoBehaviour
     {
         float moveInput = Input.GetAxisRaw("Horizontal");
         rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
+        animator.SetFloat("Speed",Mathf.Abs(rb.velocity.x));
+        if(rb.velocity.x < 0)
+        {
+            gameObject.transform.localScale = new Vector3(-1, 1, 1);
+        }
+        else if (rb.velocity.x > 0)
+        {
+            gameObject.transform.localScale = new Vector3(1, 1, 1);
+        }
 
         RaycastHit2D hit = Physics2D.Raycast(raycastOrigin.position, Vector2.down, rayLength, groundLayer);
 
@@ -44,8 +59,38 @@ public class Movement : MonoBehaviour
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         }
+        bool isCrouching = isGrounded && Input.GetKey(KeyCode.S);
+        if (isGrounded && Input.GetKey(KeyCode.S))
+        {
+            Crouch(isCrouching);
+            Debug.Log("Crouching"); // בדיקה
+            animator.SetBool("IsCrouching", true);
+        }
+        else 
+        {
+            Crouch(isCrouching);
+            Debug.Log("Not Crouching"); // בדיקה
+            animator.SetBool("IsCrouching", false);
+        }
     }
-
+    
+    public void Crouch(bool isCrouching)
+    {
+        if (isCrouching)
+        {
+            // גודל חדש קטן יותר (לדוגמה חצי גובה)
+            boxCollider.size = new Vector2(originalColliderSize.x, originalColliderSize.y / 2f);
+            // הורדת הקוליידר מעט למטה (כדי שיתאים לגוף התכופף)
+            boxCollider.offset = new Vector2(originalColliderOffset.x, originalColliderOffset.y - originalColliderSize.y / 4f);
+        }
+        else
+        {
+            // מחזירים לגודל ומיקום המקורי
+            boxCollider.size = originalColliderSize;
+            boxCollider.offset = originalColliderOffset;
+        }
+    }
+    
     private void OnDrawGizmos()
     {
         if (raycastOrigin != null)

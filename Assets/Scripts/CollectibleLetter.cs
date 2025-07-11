@@ -16,7 +16,6 @@ public class CollectibleLetter : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            Debug.Log("u touched a letter");
             GameManager.Instance.CollectLetterSprite(letterSprite);
             Destroy(gameObject);
         }

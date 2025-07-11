@@ -1,4 +1,3 @@
-
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -7,23 +6,31 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
+    [Header("Player Stats")]
+    public int playerLives = 3;
+    public Text livesText;
+
     [Header("Level System")]
     public LevelDatabase levelDatabase;
     public int currentLevelIndex = 0;
     private LevelData currentLevel;
+
     [Header("Word Management")]
-    public List<WordData> availableWords; // מילים שיצרנו מראש
+    public List<WordData> availableWords; // Predefined word list
     public WordData currentWord;
     public Alphabet alphabet;
+
     [Header("Letter Spawn Settings")]
-    public GameObject letterPrefab;          // פריפאב של אות
-    public Transform[] letterSpawnPoints;    // נקודות להצבת אותיות
+    public GameObject letterPrefab;           // Letter prefab
+    public Transform[] letterSpawnPoints;     // Letter spawn points
     public Transform[] usedLetterSpawnPoints;
-    public Image currentDisplayedWord; // משויך דרך ה-Inspector
+    public Image currentDisplayedWord;        // Linked through Inspector
     public Image successImage;
     public Transform startingLocation;
     public GameObject Player;
+
     public static GameManager Instance { get; private set; }
+
     void Awake()
     {
         if (Instance == null)
@@ -36,31 +43,51 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
         StartGame();
-        
     }
 
-   
+    public void UpdateLivesUI()
+    {
+        if (livesText != null)
+        {
+            livesText.text = "Lives: " + playerLives.ToString();
+        }
+    }
+
     public void StartGame()
     {
-        Debug.Log("המשחק התחיל!");
+        Debug.Log("Game started!");
         startingLocation.transform.position = Player.transform.position;
         successImage.enabled = false;
+        UpdateLivesUI();
         LoadLevel(currentLevelIndex);
+    }
+
+    public void LoseLife()
+    {
+        playerLives--;
+        UpdateLivesUI();
+
+        if (playerLives <= 0)
+        {
+            Debug.Log("Game Over");
+            // Trigger Game Over screen or return to menu
+        }
     }
 
     private void LoadLevel(int index)
     {
         Player.transform.position = startingLocation.transform.position;
         successImage.enabled = false;
+
         if (levelDatabase == null || levelDatabase.levels.Count == 0)
         {
-            Debug.LogWarning("לא מוגדרת רשימת שלבים!");
+            Debug.LogWarning("No level list defined!");
             return;
         }
 
         if (index < 0 || index >= levelDatabase.levels.Count)
         {
-            Debug.LogWarning("אינדקס שלב לא תקני!");
+            Debug.LogWarning("Invalid level index!");
             return;
         }
 
@@ -73,59 +100,86 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("חסר חיבור לתמונה או שאין תמונה למילה");
+            Debug.LogWarning("Missing reference or word sprite");
         }
 
         StartNewLevel(currentWord);
     }
-    /*
-    public void LoadRandomWord()
+
+    public void SpawnWrongLetters(LevelData leveldata, List<Transform> availableSpawns)
     {
-        Debug.Log(" בוחרים מילה רנדומלית");
-        if (availableWords.Count == 0)
+        int wrongLettersCount = leveldata.fakeLettersToSpawn;
+
+        // Create a fresh copy to avoid modifying the original list
+        List<Sprite> wrongLetters = new List<Sprite>(alphabet.letterSprites);
+
+        // Remove correct letters from the copy
+        wrongLetters.RemoveAll(letter => currentWord.letterSprites.Contains(letter));
+
+        List<Sprite> chosenWrongLetters = new List<Sprite>();
+
+        for (int i = 0; i < wrongLettersCount; i++)
         {
-            Debug.LogWarning(" אין מילים זמינות!");
-            return;
+            if (wrongLetters.Count == 0)
+            {
+                Debug.LogWarning("No more fake letters available to choose from");
+                break;
+            }
+
+            int wordLocation = UnityEngine.Random.Range(0, wrongLetters.Count);
+            chosenWrongLetters.Add(wrongLetters[wordLocation]);
+            wrongLetters.RemoveAt(wordLocation); // This is safe now
         }
-        int index = Random.Range(0, availableWords.Count);
-        StartNewLevel(availableWords[index]);
-        if (currentDisplayedWord != null && currentWord.wordSprite != null)
+
+        foreach (Sprite wrongLetter in chosenWrongLetters)
         {
-            currentDisplayedWord.sprite = currentWord.wordSprite;
-        }
-        else
-        {
-            Debug.LogWarning("חסר חיבור לתמונה או שאין תמונה למילה");
+            if (availableSpawns.Count == 0)
+            {
+                Debug.LogWarning("No remaining spawn points for fake letters");
+                break;
+            }
+
+            int spawnIndex = UnityEngine.Random.Range(0, availableSpawns.Count);
+            Transform spawn = availableSpawns[spawnIndex];
+            availableSpawns.RemoveAt(spawnIndex);
+
+            GameObject letterObj = Instantiate(letterPrefab, spawn.position, Quaternion.identity);
+            var letter = letterObj.GetComponent<CollectibleLetter>();
+            letter.letterSprite = wrongLetter;
         }
     }
-    */
+
     private List<Sprite> collectedSprites = new();
 
     public void StartNewLevel(WordData word)
     {
-        Debug.Log("מתחילים שלב חדש עם: " + word.wordName);
-        currentWord = word;
-        collectedSprites.Clear();
-
-        Debug.Log(" מילה חדשה נבחרה: " + currentWord.wordName);
-        SpawnLetters();
-        //SpawnFakeLetters();
-    }
-
-    public void SpawnLetters()
-    {
-        Debug.Log(" מציבים אותיות בסצנה...");
-        if (currentWord == null || letterPrefab == null)
+        GameObject[] existingLetters = GameObject.FindGameObjectsWithTag("Letter");
+        foreach (GameObject letter in existingLetters)
         {
-            Debug.LogWarning(" לא ניתן להציב אותיות – חסרים נתונים");
-            return;
+            Destroy(letter);
         }
 
-        // מוצא את כל האובייקטים שעם תגית "Platform"
-        GameObject[] platforms = GameObject.FindGameObjectsWithTag("Platform");
-        List<Transform> spawnPoints = new List<Transform>();
+        Debug.Log("Removed previous letters: " + existingLetters.Length);
 
-        // מתוך כל פלטפורמה, מוצאים את הילד שנקרא "LetterSpawnPoint"
+        Debug.Log("Starting new level with: " + word.wordName);
+        currentWord = word;
+        collectedSprites.Clear();
+        SpawnAllLetters(currentLevel);
+        Debug.Log("Selected new word: " + currentWord.wordName);
+    }
+
+    public void SpawnAllLetters(LevelData levelData)
+    {
+        List<Transform> allPoints = GetAllLetterSpawnPoints();
+        List<Transform> remainingPoints = SpawnCorrectLetters(allPoints);
+        SpawnWrongLetters(levelData, remainingPoints);
+    }
+
+    public List<Transform> GetAllLetterSpawnPoints()
+    {
+        GameObject[] platforms = GameObject.FindGameObjectsWithTag("Platform");
+        List<Transform> spawnPoints = new();
+
         foreach (GameObject platform in platforms)
         {
             Transform spawnPoint = platform.transform.Find("LetterSpawnPoint");
@@ -135,20 +189,18 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (spawnPoints.Count == 0)
-        {
-            Debug.LogWarning(" לא נמצאו נקודות Spawn");
-            return;
-        }
+        return spawnPoints;
+    }
 
-        // נשתמש במקומות רנדומליים מתוך הרשימה
+    public List<Transform> SpawnCorrectLetters(List<Transform> spawnPoints)
+    {
         List<Transform> availableSpawns = new(spawnPoints);
 
         for (int i = 0; i < currentWord.letterSprites.Count; i++)
         {
             if (availableSpawns.Count == 0)
             {
-                Debug.LogWarning(" לא נשארו נקודות פנויות לאותיות");
+                Debug.LogWarning("No remaining spawn points for correct letters");
                 break;
             }
 
@@ -160,48 +212,10 @@ public class GameManager : MonoBehaviour
             var letter = letterObj.GetComponent<CollectibleLetter>();
             letter.letterSprite = currentWord.letterSprites[i];
         }
+
+        return availableSpawns;
     }
-    /*
-    public void SpawnFakeLetters()
-    {
-        GameObject[] platforms = GameObject.FindGameObjectsWithTag("Platform");
-        List<Transform> spawnPoints = new List<Transform>();
 
-        // מתוך כל פלטפורמה, מוצאים את הילד שנקרא "LetterSpawnPoint"
-        foreach (GameObject platform in platforms)
-        {
-            Transform spawnPoint = platform.transform.Find("LetterSpawnPoint");
-            if (spawnPoint != null)
-            {
-                spawnPoints.Add(spawnPoint);
-            }
-        }
-
-        if (spawnPoints.Count == 0)
-        {
-            Debug.LogWarning(" לא נמצאו נקודות Spawn");
-            return;
-        }
-
-        // נשתמש במקומות רנדומליים מתוך הרשימה
-        List<Transform> availableSpawns = new(spawnPoints);
-
-       List<Sprite> wrongLetters = new List<Sprite>(alphabet.letterSprites);
-        wrongLetters.RemoveAll(letter => currentWord.letterSprites.Contains(letter));
-        
-        int openSpots = availableSpawns.Count;
-        int index = Random.Range(0, availableSpawns.Count);
-        while (openSpots > 0)
-        {
-            Transform spawn = availableSpawns[openSpots];
-            GameObject letterObj = Instantiate(letterPrefab, spawn.position, Quaternion.identity);
-            var letter = letterObj.GetComponent<CollectibleLetter>();
-            
-            openSpots--;
-        }
-
-    }
-    */
     public void CollectLetterSprite(Sprite letterSprite)
     {
         if (currentWord == null)
@@ -212,22 +226,21 @@ public class GameManager : MonoBehaviour
             if (!collectedSprites.Contains(letterSprite))
             {
                 collectedSprites.Add(letterSprite);
-                Debug.Log(" אספת: " + letterSprite.name);
+                Debug.Log("Collected: " + letterSprite.name);
 
                 if (IsWordComplete())
                 {
-                    Debug.Log(" השלמת את המילה: " + currentWord.wordName);
+                    Debug.Log("Word completed: " + currentWord.wordName);
                     FinishedLevel(1.5f);
-                    // בהמשך נוכל לעשות כאן מעבר שלב או להציג UI
                 }
             }
         }
         else
         {
-            Debug.Log(" זאת לא אות נכונה: " + letterSprite.name);
+            Debug.Log("Wrong letter collected: " + letterSprite.name);
         }
     }
-   
+
     private bool IsWordComplete()
     {
         foreach (var sprite in currentWord.letterSprites)
@@ -237,29 +250,29 @@ public class GameManager : MonoBehaviour
         }
         return true;
     }
+
     public void FinishedLevel(float delay)
     {
         successImage.enabled = true;
-        if(collectedSprites != null)
+        if (collectedSprites != null)
         {
             collectedSprites.Clear();
         }
+
         currentLevelIndex++;
-        if(currentLevelIndex >= levelDatabase.levels.Count)
+        if (currentLevelIndex >= levelDatabase.levels.Count)
         {
-            Debug.Log("no more levels");
+            Debug.Log("No more levels");
         }
         else
         {
             StartCoroutine(LoadNextLevelAfterDelay(delay));
         }
-        
-
     }
+
     private IEnumerator LoadNextLevelAfterDelay(float delay)
     {
-            yield return new WaitForSeconds(delay);
-            LoadLevel(currentLevelIndex);        
+        yield return new WaitForSeconds(delay);
+        LoadLevel(currentLevelIndex);
     }
-
 }
