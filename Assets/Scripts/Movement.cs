@@ -64,13 +64,11 @@ public class Movement : MonoBehaviour
         if (isGrounded && Input.GetKey(KeyCode.S))
         {
             Crouch(isCrouching);
-            Debug.Log("Crouching"); // בדיקה
             animator.SetBool("IsCrouching", true);
         }
         else 
         {
             Crouch(isCrouching);
-            Debug.Log("Not Crouching"); // בדיקה
             animator.SetBool("IsCrouching", false);
         }
     }
@@ -79,14 +77,11 @@ public class Movement : MonoBehaviour
     {
         if (isCrouching)
         {
-            // גודל חדש קטן יותר (לדוגמה חצי גובה)
             boxCollider.size = new Vector2(originalColliderSize.x, originalColliderSize.y / 2f);
-            // הורדת הקוליידר מעט למטה (כדי שיתאים לגוף התכופף)
             boxCollider.offset = new Vector2(originalColliderOffset.x, originalColliderOffset.y - originalColliderSize.y / 4f);
         }
         else
         {
-            // מחזירים לגודל ומיקום המקורי
             boxCollider.size = originalColliderSize;
             boxCollider.offset = originalColliderOffset;
         }

@@ -5,19 +5,19 @@ using UnityEngine;
 
 public class CameraFollowWithMinY : MonoBehaviour
 {
-    public Transform player;    // שחקן לעקוב אחריו
-    public float minY = 3f;     // הגובה המינימלי של המצלמה (כשעל הרצפה)
-    public float offsetZ = -10f; // המרחק במישור Z (למצלמה תלת מימדית)
-    public float smoothSpeed = 5f; // מהירות החלקה
+    public Transform player;    
+    public float minY = 3f;    
+    public float offsetZ = -10f; 
+    public float smoothSpeed = 5f; 
 
     private Vector3 velocity = Vector3.zero;
-    public float fixedY = 2.5f;   // הגובה הקבוע של המצלמה בציר Y
+    public float fixedY = 2.5f;   
 
     private Transform camTransform;
 
     void Start()
     {
-        camTransform = transform; // המיקום של אובייקט המצלמה (הוירטואלית)
+        camTransform = transform; 
         Vector3 startPos = new Vector3(player.position.x, fixedY, camTransform.position.z);
         camTransform.position = startPos;
     }
@@ -29,7 +29,6 @@ public class CameraFollowWithMinY : MonoBehaviour
         float targetY = Mathf.Max(player.position.y, minY);
         Vector3 targetPos = new Vector3(player.position.x, targetY, offsetZ);
 
-        // החלקה חלקה למיקום החדש
         transform.position = Vector3.SmoothDamp(transform.position, targetPos, ref velocity, 1f / smoothSpeed);
     }
 }

@@ -207,10 +207,10 @@ public class GameManager : MonoBehaviour
         return availableSpawns;
     }
     //gets the letter the player collected and decides if its the correct or wring letter and what to do in each case
-    public void CollectLetterSprite(Sprite letterSprite)
+    public bool CollectLetterSprite(Sprite letterSprite)
     {
         if (currentWord == null)
-            return;
+            return false;
 
         if (currentWord.letterSprites.Contains(letterSprite))
         {
@@ -218,18 +218,19 @@ public class GameManager : MonoBehaviour
             {
                 collectedSprites.Add(letterSprite);
                 Debug.Log("Collected: " + letterSprite.name);
-
                 if (IsWordComplete())
                 {
                     Debug.Log("Word completed: " + currentWord.wordName);
                     FinishedLevel(1.5f);
                 }
             }
+            return true;
         }
         else
         {
-            LoseLife();
+            LoseLife();           
             Debug.Log("Wrong letter collected: " + letterSprite.name);
+            return false;
         }
     }
     // checks is the whole word was collected and returns a bool

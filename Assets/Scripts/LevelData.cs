@@ -6,6 +6,6 @@ using UnityEngine;
     public class LevelData : ScriptableObject
     {
         public WordData wordData;
-        public int fakeLettersToSpawn = 3; // ברירת מחדל, אפשר לשנות בעתיד
+        public int fakeLettersToSpawn = 3; 
     }
 

@@ -5,8 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class GameOverManager : MonoBehaviour
 {
-    public GameObject gameOverPanel; // assign in inspector (Panel with black bg + button)
-    public GameObject restartButton;  // הכפתור שמתחיל מחדש
+    public GameObject gameOverPanel;
+    public GameObject restartButton;  
     public GameObject gameOverImage;
     public Movement player;
     void Start()
