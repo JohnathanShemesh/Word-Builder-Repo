@@ -46,7 +46,9 @@ public class GameManager : MonoBehaviour
         }
         StartGame();
     }
-
+    //makes a starting location for the player. 
+    //disables the level complete image.
+    //calls "load level" method that gets the level we want to start
     public void StartGame()
     {
         Debug.Log("Game started!");
@@ -54,7 +56,7 @@ public class GameManager : MonoBehaviour
         successImage.enabled = false;
         LoadLevel(currentLevelIndex);
     }
-
+    //decreasing healthpoints when a player takes the wrong letter. also checks to see if the player lost all healthpoints in which case it called the game over method
     public void LoseLife()
     {
         playerLives--;
@@ -66,6 +68,7 @@ public class GameManager : MonoBehaviour
             currentWordUi.SetActive(false);
         }
     }
+    //gets the index of the level from the leveldatabase and loads it.
     private void LoadLevel(int index)
     {
         Player.transform.position = startingLocation.transform.position;
@@ -97,7 +100,7 @@ public class GameManager : MonoBehaviour
 
         StartNewLevel(currentWord);
     }
-
+    //spawns a certain amount of letters from a list of the remaining letters at the remaining available spawn points
     public void SpawnWrongLetters(LevelData leveldata, List<Transform> availableSpawns)
     {
         int wrongLettersCount = leveldata.fakeLettersToSpawn;
@@ -138,7 +141,7 @@ public class GameManager : MonoBehaviour
     }
 
     private List<Sprite> collectedSprites = new();
-
+    //gets the new level's word and removes the remaining letters fron the previous level. then calls a method to start the next level
     public void StartNewLevel(WordData word)
     {
         GameObject[] existingLetters = GameObject.FindGameObjectsWithTag("Letter");
@@ -155,14 +158,14 @@ public class GameManager : MonoBehaviour
         SpawnAllLetters(currentLevel);
         Debug.Log("Selected new word: " + currentWord.wordName);
     }
-
+    //gets the level's data and spawns the wrong and correct letters into the level
     public void SpawnAllLetters(LevelData levelData)
     {
         List<Transform> allPoints = GetAllLetterSpawnPoints();
         List<Transform> remainingPoints = SpawnCorrectLetters(allPoints);
         SpawnWrongLetters(levelData, remainingPoints);
     }
-
+    //returns a list of all available spawn points in the level
     public List<Transform> GetAllLetterSpawnPoints()
     {
         GameObject[] platforms = GameObject.FindGameObjectsWithTag("Platform");
@@ -179,7 +182,7 @@ public class GameManager : MonoBehaviour
 
         return spawnPoints;
     }
-
+    //spawns all the correct letters into the level and returns a list of the remaining available spawn points.
     public List<Transform> SpawnCorrectLetters(List<Transform> spawnPoints)
     {
         List<Transform> availableSpawns = new(spawnPoints);
@@ -203,7 +206,7 @@ public class GameManager : MonoBehaviour
 
         return availableSpawns;
     }
-
+    //gets the letter the player collected and decides if its the correct or wring letter and what to do in each case
     public void CollectLetterSprite(Sprite letterSprite)
     {
         if (currentWord == null)
@@ -225,10 +228,11 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            LoseLife();
             Debug.Log("Wrong letter collected: " + letterSprite.name);
         }
     }
-
+    // checks is the whole word was collected and returns a bool
     private bool IsWordComplete()
     {
         foreach (var sprite in currentWord.letterSprites)
@@ -238,7 +242,7 @@ public class GameManager : MonoBehaviour
         }
         return true;
     }
-
+    //initiates the sequence of moving to the next level
     public void FinishedLevel(float delay)
     {
         successImage.enabled = true;

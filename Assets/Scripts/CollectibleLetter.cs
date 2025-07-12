@@ -17,12 +17,6 @@ public class CollectibleLetter : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             GameManager.Instance.CollectLetterSprite(letterSprite);
-
-            if (!GameManager.Instance.currentWord.letterSprites.Contains(letterSprite))
-            {
-                GameManager.Instance.LoseLife();
-            }
-
             Destroy(gameObject);
         }
     }
