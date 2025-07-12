@@ -42,7 +42,8 @@ public class Movement : MonoBehaviour
             gameObject.transform.localScale = new Vector3(1, 1, 1);
         }
 
-        RaycastHit2D hit = Physics2D.Raycast(raycastOrigin.position, Vector2.down, rayLength, groundLayer);
+        Vector2 boxSize = new Vector2(boxCollider.size.x * 0.9f, 0.05f);
+        RaycastHit2D hit = Physics2D.BoxCast(boxCollider.bounds.center, boxSize, 0f, Vector2.down, rayLength, groundLayer);
 
         if (hit.collider != null)
         {
@@ -90,15 +91,17 @@ public class Movement : MonoBehaviour
             boxCollider.offset = originalColliderOffset;
         }
     }
-    
+
     private void OnDrawGizmos()
     {
-        if (raycastOrigin != null)
+        if (boxCollider != null)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawLine(raycastOrigin.position, raycastOrigin.position + Vector3.down * rayLength);
+            Vector2 boxSize = new Vector2(boxCollider.size.x * 0.9f, 0.05f);
+            Gizmos.DrawWireCube(boxCollider.bounds.center + Vector3.down * rayLength, boxSize);
         }
     }
+
 
 
 }

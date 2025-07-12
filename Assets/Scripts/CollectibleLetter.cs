@@ -12,12 +12,19 @@ public class CollectibleLetter : MonoBehaviour
         GetComponent<SpriteRenderer>().sprite = letterSprite;
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
         {
             GameManager.Instance.CollectLetterSprite(letterSprite);
+
+            if (!GameManager.Instance.currentWord.letterSprites.Contains(letterSprite))
+            {
+                GameManager.Instance.LoseLife();
+            }
+
             Destroy(gameObject);
         }
     }
+
 }

@@ -14,11 +14,13 @@ public class GameManager : MonoBehaviour
     public LevelDatabase levelDatabase;
     public int currentLevelIndex = 0;
     private LevelData currentLevel;
-
+    public Healthbar healthBar;
+    public GameOverManager gameOverManager;
     [Header("Word Management")]
     public List<WordData> availableWords; // Predefined word list
     public WordData currentWord;
     public Alphabet alphabet;
+    public GameObject currentWordUi;
 
     [Header("Letter Spawn Settings")]
     public GameObject letterPrefab;           // Letter prefab
@@ -45,35 +47,25 @@ public class GameManager : MonoBehaviour
         StartGame();
     }
 
-    public void UpdateLivesUI()
-    {
-        if (livesText != null)
-        {
-            livesText.text = "Lives: " + playerLives.ToString();
-        }
-    }
-
     public void StartGame()
     {
         Debug.Log("Game started!");
         startingLocation.transform.position = Player.transform.position;
         successImage.enabled = false;
-        UpdateLivesUI();
         LoadLevel(currentLevelIndex);
     }
 
     public void LoseLife()
     {
         playerLives--;
-        UpdateLivesUI();
-
+        FindObjectOfType<Healthbar>().UpdateHearts(playerLives);
         if (playerLives <= 0)
         {
             Debug.Log("Game Over");
-            // Trigger Game Over screen or return to menu
+            gameOverManager.ShowGameOver();
+            currentWordUi.SetActive(false);
         }
     }
-
     private void LoadLevel(int index)
     {
         Player.transform.position = startingLocation.transform.position;
@@ -109,11 +101,7 @@ public class GameManager : MonoBehaviour
     public void SpawnWrongLetters(LevelData leveldata, List<Transform> availableSpawns)
     {
         int wrongLettersCount = leveldata.fakeLettersToSpawn;
-
-        // Create a fresh copy to avoid modifying the original list
         List<Sprite> wrongLetters = new List<Sprite>(alphabet.letterSprites);
-
-        // Remove correct letters from the copy
         wrongLetters.RemoveAll(letter => currentWord.letterSprites.Contains(letter));
 
         List<Sprite> chosenWrongLetters = new List<Sprite>();
@@ -128,7 +116,7 @@ public class GameManager : MonoBehaviour
 
             int wordLocation = UnityEngine.Random.Range(0, wrongLetters.Count);
             chosenWrongLetters.Add(wrongLetters[wordLocation]);
-            wrongLetters.RemoveAt(wordLocation); // This is safe now
+            wrongLetters.RemoveAt(wordLocation);
         }
 
         foreach (Sprite wrongLetter in chosenWrongLetters)
