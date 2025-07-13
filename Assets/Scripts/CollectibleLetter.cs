@@ -29,7 +29,7 @@ public class CollectibleLetter : MonoBehaviour
             }
             else
             {
-                Destroy(gameObject);
+                StartCoroutine(WrongLetterFeedback());
             }
         }
     }
@@ -53,6 +53,37 @@ public class CollectibleLetter : MonoBehaviour
         }
 
         transform.position = end;
+
+        Destroy(gameObject);
+    }
+    private IEnumerator WrongLetterFeedback()
+    {
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        Color originalColor = sr.color;
+
+        // Change color to red
+        sr.color = Color.red;
+
+        // Shake effect (slight random movement)
+        float duration = 0.3f;
+        float elapsed = 0f;
+        float shakeMagnitude = 0.05f;
+        Vector3 originalPos = transform.position;
+
+        while (elapsed < duration)
+        {
+            float x = Random.Range(-shakeMagnitude, shakeMagnitude);
+            float y = Random.Range(-shakeMagnitude, shakeMagnitude);
+            transform.position = originalPos + new Vector3(x, y, 0);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = originalPos;
+        sr.color = originalColor;
+
+        yield return new WaitForSeconds(0.2f); // small delay before disappearing
 
         Destroy(gameObject);
     }

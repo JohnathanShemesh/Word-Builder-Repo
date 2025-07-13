@@ -66,7 +66,7 @@ public class GameManager : MonoBehaviour
             Debug.Log("Game Over");
             gameOverManager.ShowGameOver();
             currentWordUi.SetActive(false);
-        }
+        }        
     }
     //gets the index of the level from the leveldatabase and loads it.
     private void LoadLevel(int index)
@@ -233,6 +233,8 @@ public class GameManager : MonoBehaviour
             return false;
         }
     }
+   
+
     // checks is the whole word was collected and returns a bool
     private bool IsWordComplete()
     {
