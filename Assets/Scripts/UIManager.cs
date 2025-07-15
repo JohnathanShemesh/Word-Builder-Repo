@@ -9,8 +9,12 @@ public class UIManager : MonoBehaviour
     [Header("Word UI Settings")]
     public Transform wordUIContainer;
     public GameObject letterUIPrefab;
+    private Dictionary<string, List<Image>> letterUIImages = new();
+    [Header("Health Bar Settings")]
+    public Healthbar healthbar;
     void Awake()
     {
+        Debug.Log("UIManager Awake called");
         if (Instance == null)
         {
             Instance = this;
@@ -21,24 +25,52 @@ public class UIManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
+    //gets a list of letters that we need to spawn and makes new object that has the transform of the word container and the letterprefab
+    //makes the letters gray and spawns them into the word container
     public void CreateWordUI(List<LetterDataSO> lettersToSpawn)
     {
+        letterUIImages.Clear(); // Clear previous references
         Debug.Log("Creating word UI for: " + lettersToSpawn.Count + " letters");
 
         for (int i = 0; i < lettersToSpawn.Count; i++)
         {
             GameObject letterUI = Instantiate(letterUIPrefab, wordUIContainer);
 
-            // Get the Image component and set the sprite
             Image letterImage = letterUI.GetComponent<Image>();
             letterImage.sprite = lettersToSpawn[i].upperCase;
+            letterImage.color = Color.gray; // Grayed out initially
 
-            // Set horizontal position to spread them out
             RectTransform rectTransform = letterUI.GetComponent<RectTransform>();
-            rectTransform.anchoredPosition = new Vector2(i * 100, 0); // 100 pixels apart
+            rectTransform.anchoredPosition = new Vector2(i * 100, 0);
 
-            Debug.Log($"Created UI for letter: {lettersToSpawn[i].letterName}");
+            string letter = lettersToSpawn[i].letterName.ToUpper();
+
+            if (!letterUIImages.ContainsKey(letter))
+                letterUIImages[letter] = new List<Image>();
+
+            letterUIImages[letter].Add(letterImage); // Store the image
         }
+    }
+    public void RevealLetter(string letter)
+    {
+        letter = letter.ToUpper();
+
+        if (letterUIImages.ContainsKey(letter))
+        {
+            foreach (Image img in letterUIImages[letter])
+            {
+                if (img.color == Color.gray)
+                {
+                    img.color = Color.white; // Reveal the letter
+                    break; // Only reveal one instance at a time
+                }
+            }
+        }
+    }
+
+
+    public void UpdateHearts(int lives)
+    {
+       healthbar.UpdateHearts(lives);
     }
 }

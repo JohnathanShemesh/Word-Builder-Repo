@@ -47,12 +47,10 @@ public class Movement : MonoBehaviour
 
         if (hit.collider != null)
         {
-            Debug.Log("Hit ground: " + hit.collider.name);
             isGrounded = true;
         }
         else
         {
-            Debug.Log("Not grounded");
             isGrounded = false;
         }
 

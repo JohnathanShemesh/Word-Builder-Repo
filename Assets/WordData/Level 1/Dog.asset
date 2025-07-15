@@ -12,9 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f831df871a23984d8b64746fe755c83, type: 3}
   m_Name: Dog
   m_EditorClassIdentifier: 
-  wordName: dog
-  wordSprite: {fileID: 21300000, guid: 4b55bd51a84031145b668159442a19c4, type: 3}
-  letterSprites:
-  - {fileID: 21300000, guid: fcb6f80043742d44ab4655932db8c36f, type: 3}
-  - {fileID: 21300000, guid: c601ab9341e6d38439d99ff0dc940d7d, type: 3}
-  - {fileID: 21300000, guid: e0c87c93cdc4ad44b8cf6422ca6a9c23, type: 3}
+  wordName: DOG

@@ -16,11 +16,12 @@ public class CollectibleLetter : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        Debug.Log(letterData.letterName);
         if (!collected && other.CompareTag("Player"))
         {
             collected = true;
 
-            bool isCorrect = GameManager.Instance.CollectLetter(letterData);
+            bool isCorrect = GameManager.Instance.CollectLetterSprite(letterData);
 
             if (isCorrect)
                 StartCoroutine(MoveToWordImage());
@@ -31,7 +32,7 @@ public class CollectibleLetter : MonoBehaviour
 
     private IEnumerator MoveToWordImage()
     {
-        Transform target = GameManager.Instance.currentDisplayedWord.transform;
+        Transform target = UIManager.Instance.wordUIContainer.transform;
         Vector3 start = transform.position;
         Vector3 end = Camera.main.ScreenToWorldPoint(target.position);
         end.z = 0;

@@ -8,7 +8,6 @@ public class GameManager : MonoBehaviour
 {
     [Header("Player Stats")]
     public int playerLives = 3;
-    public Text livesText;
 
     [Header("Level System")]
     public LevelDatabase levelDatabase;
@@ -17,12 +16,6 @@ public class GameManager : MonoBehaviour
     public GameOverManager gameOverManager;
     public int currentLevelIndex = 0;
     public int currentWordIndex = 0;
-    [Header("Word Management")]
-    public List<WordData> availableWords; // Predefined word list
-    public WordData currentWord;
-    public Alphabet alphabet;
-    public GameObject currentWordUi;
-
     [Header("Letter Spawn Settings")]
     public GameObject letterPrefab;           // Letter prefab
     public Transform[] letterSpawnPoints;     // Letter spawn points
@@ -31,8 +24,10 @@ public class GameManager : MonoBehaviour
     public Image successImage;
     public Transform startingLocation;
     public GameObject Player;
-
-    [SerializeField] LetterDataBaseSO lettersDataBase;//new
+    public LetterDataBaseSO lettersDataBaseRef;//new
+    //counters for collection method
+    private Dictionary<string, int> requiredLetterCounts = new();
+    private Dictionary<string, int> collectedLetterCounts = new();
     public static GameManager Instance { get; private set; }
 
     void Awake()
@@ -46,7 +41,11 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        StartGame();
+       
+    }
+    private void Start()
+    {
+         StartGame();
     }
     //makes a starting location for the player. 
     //disables the level complete image.
@@ -62,22 +61,18 @@ public class GameManager : MonoBehaviour
     public void LoseLife()
     {
         playerLives--;
-        FindObjectOfType<Healthbar>().UpdateHearts(playerLives);
+        UIManager.Instance.UpdateHearts(playerLives);
         if (playerLives <= 0)
         {
             Debug.Log("Game Over");
             gameOverManager.ShowGameOver();
-            currentWordUi.SetActive(false);
         }        
     }
-    public bool CollectLetter(LetterDataSO letterdata)
-    {
-        return true;
-    }
+
     public void GetNewLevel(int levelIndex, int wordIndex)
     {
         LevelData level = levelDatabase.GetLevel(levelIndex);
-
+        LetterDataBaseSO letterDataBaseSO = lettersDataBaseRef;
         if (wordIndex < 0 || wordIndex >= level.wordData.Count)
         {
             Debug.LogWarning("Invalid word index");
@@ -86,12 +81,14 @@ public class GameManager : MonoBehaviour
 
         WordData currentWordData = level.wordData[wordIndex];
         string word = currentWordData.wordName;
+        GameManager.Instance.requiredLetterCounts = new Dictionary<string, int>();
+        InitializeLetterCounts(word); // <-- Add this line!
 
         List<LetterDataSO> lettersToSpawn = new List<LetterDataSO>();
-
+       
         foreach (char c in word)
         {
-            LetterDataSO letterSO = lettersDataBase.GetLetter(c.ToString());
+            LetterDataSO letterSO = lettersDataBaseRef.GetLetter(c.ToString());
             if (letterSO != null)
             {
                 lettersToSpawn.Add(letterSO);
@@ -103,7 +100,7 @@ public class GameManager : MonoBehaviour
         }
 
         UIManager.Instance.CreateWordUI(lettersToSpawn);
-        SpawnManager.Instance.SpawnLetters(lettersToSpawn);
+        SpawnManager.Instance.SpawnLetters(lettersToSpawn, letterDataBaseSO, level);
     }
     void OnWordCompleted()
     {
@@ -112,30 +109,97 @@ public class GameManager : MonoBehaviour
 
         if (currentWordIndex >= currentLevel.wordData.Count)
         {
-            // עברנו את כל המילים בשלב, עוברים לשלב הבא
             currentLevelIndex++;
             currentWordIndex = 0;
 
             if (currentLevelIndex >= levelDatabase.levels.Count)
             {
                 Debug.Log("No more levels!");
-                // אפשר להציג מסך סיום או משהו
+                //add finished game screen
                 return;
             }
         }
-
+        Player.transform.position = startingLocation.position;
+        UIManager.Instance.UpdateHearts(3);
         GetNewLevel(currentLevelIndex, currentWordIndex);
     }
 
-   
-    //spawns all the correct letters into the level and returns a list of the remaining available spawn points.
-    
-    public bool CollectLetterSprite(Sprite letterSprite)
-    {
-        return true;
-        //create method that is responsible for the player collection of a letter. if its the wrong letter decreace life
-    }
-   
 
-      
+    public bool CollectLetterSprite(LetterDataSO collectedLetter)
+    {
+        string letterName = collectedLetter.letterName.ToUpper().Trim();
+
+        Debug.Log($"Trying to collect letter: '{letterName}'");
+        Debug.Log("Required letters:");
+        foreach (var key in requiredLetterCounts.Keys)
+        {
+            Debug.Log(key);
+        }
+        if (!requiredLetterCounts.ContainsKey(letterName.ToUpper()))
+        {
+            Debug.LogWarning($"Letter '{letterName}' is NOT in the required letters!");
+            LoseLife();
+            return false;
+        }
+
+        if (!collectedLetterCounts.ContainsKey(letterName))
+        {
+            collectedLetterCounts[letterName] = 1;
+        }
+        else
+        {
+            collectedLetterCounts[letterName]++;
+        }
+        UIManager.Instance.RevealLetter(letterName.ToUpper());
+        Debug.Log($"Collected '{letterName}' count: {collectedLetterCounts[letterName]} / {requiredLetterCounts[letterName]}");
+
+        bool wordCompleted = true;
+
+        foreach (var kvp in requiredLetterCounts)
+        {
+            string requiredLetter = kvp.Key;
+            int requiredAmount = kvp.Value;
+
+            int collectedAmount = collectedLetterCounts.ContainsKey(requiredLetter) ? collectedLetterCounts[requiredLetter] : 0;
+
+            if (collectedAmount < requiredAmount)
+            {
+                wordCompleted = false;
+                break;
+            }
+        }
+
+        if (wordCompleted)
+        {
+            Debug.Log("Word completed!");
+            OnWordCompleted();
+        }
+
+        return true;
+    }
+
+    public void InitializeLetterCounts(string word)
+    {
+        requiredLetterCounts.Clear();
+        collectedLetterCounts.Clear();
+        foreach (char c in word)
+        {
+            string letter = c.ToString().ToUpper();
+            if (requiredLetterCounts.ContainsKey(letter))
+                requiredLetterCounts[letter]++;
+            else
+                requiredLetterCounts[letter] = 1;
+        }
+        PrintRequiredLetterCounts();
+    }
+    public void PrintRequiredLetterCounts()
+    {
+        Debug.Log("Required letters and counts:");
+        foreach (var kvp in requiredLetterCounts)
+        {
+            Debug.Log($"Letter: {kvp.Key}, Count: {kvp.Value}");
+        }
+    }
+
+
 }
