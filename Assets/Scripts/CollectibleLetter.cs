@@ -1,49 +1,41 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class CollectibleLetter : MonoBehaviour
 {
-    public Sprite letterSprite;
+    public LetterDataSO letterData;
+    private bool collected = false;
 
     private void Start()
     {
-        GetComponent<SpriteRenderer>().sprite = letterSprite;
+        if (letterData != null)
+            GetComponent<SpriteRenderer>().sprite = letterData.upperCase;
+        else
+            Debug.LogWarning("No letterData assigned to collectible letter!");
     }
 
-    //checks that the player touched the letter and destroys the object of the letter
-    private bool collected = false;
-
-    void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player") && !collected)
+        if (!collected && other.CompareTag("Player"))
         {
             collected = true;
 
-            bool isCorrect = GameManager.Instance.CollectLetterSprite(letterSprite);
+            bool isCorrect = GameManager.Instance.CollectLetter(letterData);
 
             if (isCorrect)
-            {
                 StartCoroutine(MoveToWordImage());
-            }
             else
-            {
                 StartCoroutine(WrongLetterFeedback());
-            }
         }
     }
 
-
     private IEnumerator MoveToWordImage()
     {
-        Transform targetTransform = GameManager.Instance.currentDisplayedWord.transform;
+        Transform target = GameManager.Instance.currentDisplayedWord.transform;
         Vector3 start = transform.position;
-        Vector3 screenPoint = targetTransform.position;
-        Vector3 end = Camera.main.ScreenToWorldPoint(screenPoint);
+        Vector3 end = Camera.main.ScreenToWorldPoint(target.position);
         end.z = 0;
-        float duration = 0.5f;
-        float time = 0f;
+        float time = 0, duration = 0.5f;
 
         while (time < duration)
         {
@@ -53,39 +45,28 @@ public class CollectibleLetter : MonoBehaviour
         }
 
         transform.position = end;
-
         Destroy(gameObject);
     }
+
     private IEnumerator WrongLetterFeedback()
     {
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         Color originalColor = sr.color;
 
-        // Change color to red
         sr.color = Color.red;
-
-        // Shake effect (slight random movement)
-        float duration = 0.3f;
-        float elapsed = 0f;
-        float shakeMagnitude = 0.05f;
+        float duration = 0.3f, shake = 0.05f, time = 0;
         Vector3 originalPos = transform.position;
 
-        while (elapsed < duration)
+        while (time < duration)
         {
-            float x = Random.Range(-shakeMagnitude, shakeMagnitude);
-            float y = Random.Range(-shakeMagnitude, shakeMagnitude);
-            transform.position = originalPos + new Vector3(x, y, 0);
-
-            elapsed += Time.deltaTime;
+            transform.position = originalPos + Random.insideUnitSphere * shake;
+            time += Time.deltaTime;
             yield return null;
         }
 
         transform.position = originalPos;
         sr.color = originalColor;
-
-        yield return new WaitForSeconds(0.2f); // small delay before disappearing
-
+        yield return new WaitForSeconds(0.2f);
         Destroy(gameObject);
     }
-
 }

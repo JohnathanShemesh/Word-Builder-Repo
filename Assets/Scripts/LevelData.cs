@@ -5,7 +5,7 @@ using UnityEngine;
     [CreateAssetMenu(fileName = "NewLevel", menuName = "Word Game/Level Data")]
     public class LevelData : ScriptableObject
     {
-        public WordData wordData;
+        public List<WordData> wordData = new List<WordData>();
         public int fakeLettersToSpawn = 3; 
     }
 

@@ -9,8 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2dc03962805f187428a87271b5847577, type: 3}
-  m_Name: Dog
+  m_Script: {fileID: 11500000, guid: 095d438a2cec31546a63755bb608f537, type: 3}
+  m_Name: O
   m_EditorClassIdentifier: 
-  wordData: {fileID: 11400000, guid: 114207a0d5e25904db3c89be59635c7f, type: 2}
-  fakeLettersToSpawn: 3
+  letterName: O
+  upperCase: {fileID: 21300000, guid: c601ab9341e6d38439d99ff0dc940d7d, type: 3}
+  lowerCase: {fileID: 0}

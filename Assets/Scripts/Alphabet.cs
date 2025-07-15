@@ -7,4 +7,5 @@ using UnityEngine;
 public class Alphabet : ScriptableObject
 {
     public List<Sprite> letterSprites;
+    public List<LetterDataSO> letterSOs;
 }
