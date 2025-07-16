@@ -5,5 +5,6 @@ using UnityEngine;
     [CreateAssetMenu(fileName = "NewWord", menuName = "Word Game/Word Data")]
     public class WordData : ScriptableObject
     {
-        public string wordName;             // שם טקסטואלי של המילה, לצורך תצוגה או לוגיקה
-    }
+        public string wordName;
+    public int fakeLettersToSpawn = 3;
+}

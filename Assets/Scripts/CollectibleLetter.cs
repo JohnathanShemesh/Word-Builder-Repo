@@ -21,7 +21,7 @@ public class CollectibleLetter : MonoBehaviour
         {
             collected = true;
 
-            bool isCorrect = GameManager.Instance.CollectLetterSprite(letterData);
+            bool isCorrect = GameManager.Instance.CollectLetterSprite(letterData);//move that function to here - later
 
             if (isCorrect)
                 StartCoroutine(MoveToWordImage());

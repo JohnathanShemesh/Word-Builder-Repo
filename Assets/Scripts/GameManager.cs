@@ -85,7 +85,7 @@ public class GameManager : MonoBehaviour
         InitializeLetterCounts(word); // <-- Add this line!
 
         List<LetterDataSO> lettersToSpawn = new List<LetterDataSO>();
-       
+
         foreach (char c in word)
         {
             LetterDataSO letterSO = lettersDataBaseRef.GetLetter(c.ToString());
@@ -100,7 +100,7 @@ public class GameManager : MonoBehaviour
         }
 
         UIManager.Instance.CreateWordUI(lettersToSpawn);
-        SpawnManager.Instance.SpawnLetters(lettersToSpawn, letterDataBaseSO, level);
+        SpawnManager.Instance.SpawnLetters(currentWordData);
     }
     void OnWordCompleted()
     {

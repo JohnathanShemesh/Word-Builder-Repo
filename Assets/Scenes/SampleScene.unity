@@ -1705,7 +1705,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1024492625
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3390,6 +3390,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   letterPrefab: {fileID: 636694918369270965, guid: 8756be02d0c30c045af8d3ee64422f66, type: 3}
   spawnPoints: []
+  allLetters: {fileID: 11400000, guid: 1ca90a619354a874c9d274e2d84b19c9, type: 2}
 --- !u!4 &2131245614
 Transform:
   m_ObjectHideFlags: 0

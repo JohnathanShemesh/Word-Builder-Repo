@@ -12,6 +12,8 @@ public class UIManager : MonoBehaviour
     private Dictionary<string, List<Image>> letterUIImages = new();
     [Header("Health Bar Settings")]
     public Healthbar healthbar;
+
+    public List<string> word = new List<string>();
     void Awake()
     {
         Debug.Log("UIManager Awake called");
@@ -27,7 +29,7 @@ public class UIManager : MonoBehaviour
     }
     //gets a list of letters that we need to spawn and makes new object that has the transform of the word container and the letterprefab
     //makes the letters gray and spawns them into the word container
-    public void CreateWordUI(List<LetterDataSO> lettersToSpawn)
+    public void CreateWordUI(List<LetterDataSO> lettersToSpawn) // get letterdata 
     {
         letterUIImages.Clear(); // Clear previous references
         Debug.Log("Creating word UI for: " + lettersToSpawn.Count + " letters");
@@ -72,5 +74,6 @@ public class UIManager : MonoBehaviour
     public void UpdateHearts(int lives)
     {
        healthbar.UpdateHearts(lives);
+        GameManager.Instance.playerLives = lives;
     }
 }

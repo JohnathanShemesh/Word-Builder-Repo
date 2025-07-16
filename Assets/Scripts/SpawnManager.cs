@@ -6,10 +6,9 @@ using System.Linq;
 public class SpawnManager : MonoBehaviour
 {
     public static SpawnManager Instance;
-
     public GameObject letterPrefab; // Prefab של האות עם סקריפט CollectibleLetter
     public Transform[] spawnPoints; // תצטרך להכניס את הנקודות האלה באינספקטור
-
+    public LetterDataBaseSO allLetters;
     void Awake()
     {
         if (Instance == null)
@@ -23,7 +22,7 @@ public class SpawnManager : MonoBehaviour
         }
     }
 
-    public void SpawnLetters(List<LetterDataSO> lettersToSpawn, LetterDataBaseSO allLetters, LevelData currentLevel)
+    public void SpawnLetters(WordData word)//add a call to uimanager and send it the letterdata of the correct letter to spawn
     {
         ClearPreviousLetters();
         List<Transform> availableSpots = GetAllLetterSpawnPoints();
