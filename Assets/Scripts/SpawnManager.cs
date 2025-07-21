@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
-
+using System;
 public class SpawnManager : MonoBehaviour
 {
     public static SpawnManager Instance;
@@ -22,12 +22,29 @@ public class SpawnManager : MonoBehaviour
         }
     }
 
-    public void SpawnLetters(WordData word)//add a call to uimanager and send it the letterdata of the correct letter to spawn
+    public void SpawnLetters(WordData word)
     {
         ClearPreviousLetters();
         List<Transform> availableSpots = GetAllLetterSpawnPoints();
+        List<LetterDataSO> lettersToSpawn = new(); // Collect actual letters to spawn
 
-        // Spawn correct letters
+        // Step 1: Get the correct LetterDataSO objects from the word string
+        foreach (char c in word.wordName)
+        {
+            LetterDataSO matchingLetter = allLetters.letterSOs
+                .FirstOrDefault(l => l.letterName.Equals(c.ToString(), StringComparison.OrdinalIgnoreCase));
+
+            if (matchingLetter != null)
+            {
+                lettersToSpawn.Add(matchingLetter);
+            }
+            else
+            {
+                Debug.LogWarning($"Letter '{c}' not found in LetterDatabase!");
+            }
+        }
+
+        // Step 2: Spawn correct letters and update UI
         foreach (LetterDataSO letter in lettersToSpawn)
         {
             if (availableSpots.Count == 0)
@@ -36,30 +53,31 @@ public class SpawnManager : MonoBehaviour
                 return;
             }
 
-            int index = Random.Range(0, availableSpots.Count);
+            int index = UnityEngine.Random.Range(0, availableSpots.Count);
             Transform spawnPoint = availableSpots[index];
             availableSpots.RemoveAt(index);
 
             GameObject letterGO = Instantiate(letterPrefab, spawnPoint.position, Quaternion.identity);
             CollectibleLetter collectible = letterGO.GetComponent<CollectibleLetter>();
             collectible.letterData = letter;
+
+            // ?? Send this letter to UIManager to create a letter slot in the word UI
+            UIManager.Instance.AddLetterToWordUI(letter);
         }
 
-        //  Now spawn fake (wrong) letters
-        int wrongLetterAmountToSpawn = currentLevel.fakeLettersToSpawn;
+        // Step 3: Spawn fake (wrong) letters
+        int wrongLetterAmountToSpawn = word.fakeLettersToSpawn;
 
-        // 1. Filter all letters that are NOT part of the current word
-        var wrongLetters = allLetters.letterSOs.Where(l => !lettersToSpawn.Contains(l))
+        var wrongLetters = allLetters.letterSOs
+            .Where(l => !lettersToSpawn.Contains(l))
             .ToList();
 
-        // Safety check
         if (wrongLetters.Count < wrongLetterAmountToSpawn)
         {
             Debug.LogWarning("Not enough fake letters available in the database.");
             wrongLetterAmountToSpawn = wrongLetters.Count;
         }
 
-        // 2. Shuffle the list and take only the number we need
         for (int i = 0; i < wrongLetterAmountToSpawn; i++)
         {
             if (availableSpots.Count == 0)
@@ -68,14 +86,13 @@ public class SpawnManager : MonoBehaviour
                 return;
             }
 
-            int spotIndex = Random.Range(0, availableSpots.Count);
+            int spotIndex = UnityEngine.Random.Range(0, availableSpots.Count);
             Transform spawnPoint = availableSpots[spotIndex];
             availableSpots.RemoveAt(spotIndex);
 
-            // Pick a random wrong letter from the list
-            int letterIndex = Random.Range(0, wrongLetters.Count);
+            int letterIndex = UnityEngine.Random.Range(0, wrongLetters.Count);
             LetterDataSO fakeLetter = wrongLetters[letterIndex];
-            wrongLetters.RemoveAt(letterIndex); // prevent duplicates
+            wrongLetters.RemoveAt(letterIndex);
 
             GameObject letterGO = Instantiate(letterPrefab, spawnPoint.position, Quaternion.identity);
             CollectibleLetter collectible = letterGO.GetComponent<CollectibleLetter>();

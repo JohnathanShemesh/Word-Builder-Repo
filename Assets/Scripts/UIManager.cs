@@ -6,14 +6,17 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;
+
     [Header("Word UI Settings")]
     public Transform wordUIContainer;
     public GameObject letterUIPrefab;
-    private Dictionary<string, List<Image>> letterUIImages = new();
+    private Dictionary<string, Vector3> letterToWorldPositionMap = new();
+    private List<string> wordLetters = new();         // Stores the expected letter strings
+    private List<Image> letterImages = new();         // Corresponding UI images
+
     [Header("Health Bar Settings")]
     public Healthbar healthbar;
 
-    public List<string> word = new List<string>();
     void Awake()
     {
         Debug.Log("UIManager Awake called");
@@ -27,53 +30,64 @@ public class UIManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    //gets a list of letters that we need to spawn and makes new object that has the transform of the word container and the letterprefab
-    //makes the letters gray and spawns them into the word container
-    public void CreateWordUI(List<LetterDataSO> lettersToSpawn) // get letterdata 
+
+    public Dictionary<string, Vector3> GetLetterWorldPositionDictionary()
     {
-        letterUIImages.Clear(); // Clear previous references
-        Debug.Log("Creating word UI for: " + lettersToSpawn.Count + " letters");
-
-        for (int i = 0; i < lettersToSpawn.Count; i++)
-        {
-            GameObject letterUI = Instantiate(letterUIPrefab, wordUIContainer);
-
-            Image letterImage = letterUI.GetComponent<Image>();
-            letterImage.sprite = lettersToSpawn[i].upperCase;
-            letterImage.color = Color.gray; // Grayed out initially
-
-            RectTransform rectTransform = letterUI.GetComponent<RectTransform>();
-            rectTransform.anchoredPosition = new Vector2(i * 100, 0);
-
-            string letter = lettersToSpawn[i].letterName.ToUpper();
-
-            if (!letterUIImages.ContainsKey(letter))
-                letterUIImages[letter] = new List<Image>();
-
-            letterUIImages[letter].Add(letterImage); // Store the image
-        }
+        return new Dictionary<string, Vector3>(letterToWorldPositionMap);
     }
+
+    public void AddLetterToWordUI(LetterDataSO letterData)
+    {
+        string letter = letterData.letterName.ToUpper();
+        wordLetters.Add(letter);
+
+        GameObject letterUI = Instantiate(letterUIPrefab, wordUIContainer);
+        Image letterImage = letterUI.GetComponent<Image>();
+        letterImage.sprite = letterData.upperCase;
+        letterImage.color = Color.gray;
+
+        RectTransform rectTransform = letterUI.GetComponent<RectTransform>();
+        Vector2 position = new Vector2((wordLetters.Count - 1) * 100, 0);
+        rectTransform.anchoredPosition = position;
+
+        letterImages.Add(letterImage);
+
+        // Get the world position of this UI element
+        Vector3 worldPosition = rectTransform.position;
+        letterToWorldPositionMap[letter] = worldPosition;
+    }
+
     public void RevealLetter(string letter)
     {
         letter = letter.ToUpper();
-
-        if (letterUIImages.ContainsKey(letter))
+        int index = wordLetters.IndexOf(letter);
+        if (index >= 0 && index < letterImages.Count)
         {
-            foreach (Image img in letterUIImages[letter])
+            Image img = letterImages[index];
+            if (img.color == Color.gray)
             {
-                if (img.color == Color.gray)
-                {
-                    img.color = Color.white; // Reveal the letter
-                    break; // Only reveal one instance at a time
-                }
+                img.color = Color.white;
+                wordLetters.RemoveAt(index);
+                letterImages.RemoveAt(index);
+                letterToWorldPositionMap.Remove(letter);
             }
         }
     }
 
-
     public void UpdateHearts(int lives)
     {
-       healthbar.UpdateHearts(lives);
+        healthbar.UpdateHearts(lives);
         GameManager.Instance.playerLives = lives;
+    }
+
+    public void ClearWordUI()
+    {
+        foreach (Transform child in wordUIContainer)
+        {
+            Destroy(child.gameObject);
+        }
+        wordLetters.Clear();
+        letterImages.Clear();
+        letterToWorldPositionMap.Clear();
     }
 }
