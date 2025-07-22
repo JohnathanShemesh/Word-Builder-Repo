@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Movement : MonoBehaviour
+public class PlayerLogic : MonoBehaviour
 {
     public float moveSpeed = 5f;
     public float jumpForce = 10f;
-
+    //add life and word progress
     private Rigidbody2D rb;
     public Animator animator;
     public Transform raycastOrigin;

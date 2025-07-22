@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
@@ -15,7 +16,15 @@ public class UIManager : MonoBehaviour
     private List<Image> letterImages = new();         // Corresponding UI images
 
     [Header("Health Bar Settings")]
-    public Healthbar healthbar;
+    public Image[] hearts; // UI images for each heart
+    public Sprite fullHeart;
+    public Sprite emptyHeart;
+
+    [Header("Game Over Settings")]
+    public GameObject gameOverPanel;
+    public GameObject restartButton;
+    public GameObject gameOverImage;
+    public PlayerLogic player;
 
     void Awake()
     {
@@ -28,6 +37,11 @@ public class UIManager : MonoBehaviour
         else if (Instance != this)
         {
             Destroy(gameObject);
+        }
+
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
         }
     }
 
@@ -76,7 +90,13 @@ public class UIManager : MonoBehaviour
 
     public void UpdateHearts(int lives)
     {
-        healthbar.UpdateHearts(lives);
+        for (int i = 0; i < hearts.Length; i++)
+        {
+            if (i < lives)
+                hearts[i].sprite = fullHeart;
+            else
+                hearts[i].sprite = emptyHeart;
+        }
         GameManager.Instance.playerLives = lives;
     }
 
@@ -89,5 +109,37 @@ public class UIManager : MonoBehaviour
         wordLetters.Clear();
         letterImages.Clear();
         letterToWorldPositionMap.Clear();
+    }
+
+    public void ShowGameOver()
+    {
+        gameOverPanel.SetActive(true);
+        restartButton.SetActive(true);
+        gameOverImage.SetActive(true);
+        player.enabled = false;
+    }
+
+    public void RestartGame()
+    {
+        // Reset player position and enable controls
+        if (player != null)
+        {
+            player.enabled = true;
+        }
+
+        // Hide game over UI
+        gameOverPanel.SetActive(false);
+        restartButton.SetActive(false);
+        gameOverImage.SetActive(false);
+
+        // Reset hearts
+        GameManager.Instance.playerLives = 3;
+        UpdateHearts(3);
+
+        // Clear existing word UI
+        ClearWordUI();
+
+        // Restart current level using PlayerProgress info
+        GameManager.Instance.StartGame();
     }
 }

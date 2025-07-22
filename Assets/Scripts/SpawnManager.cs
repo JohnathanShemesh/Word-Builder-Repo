@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System;
+using Unity.VisualScripting.Antlr3.Runtime;
 public class SpawnManager : MonoBehaviour
 {
     public static SpawnManager Instance;
-    public GameObject letterPrefab; // Prefab של האות עם סקריפט CollectibleLetter
-    public Transform[] spawnPoints; // תצטרך להכניס את הנקודות האלה באינספקטור
+    public GameObject letterPrefab; 
+    public Transform[] spawnPoints; 
     public LetterDataBaseSO allLetters;
     void Awake()
     {
@@ -36,40 +37,37 @@ public class SpawnManager : MonoBehaviour
 
             if (matchingLetter != null)
             {
+                if (availableSpots.Count == 0)
+                {
+                    Debug.LogWarning("No available spawn points left!");
+                    return;
+                }
+
+                int index = UnityEngine.Random.Range(0, availableSpots.Count);
+                Transform spawnPoint = availableSpots[index];
+                availableSpots.RemoveAt(index);
+
+                GameObject letterGO = Instantiate(letterPrefab, spawnPoint.position, Quaternion.identity);
+                CollectibleLetter collectible = letterGO.GetComponent<CollectibleLetter>();
+                collectible.letterData = matchingLetter;
                 lettersToSpawn.Add(matchingLetter);
+
+                UIManager.Instance.AddLetterToWordUI(matchingLetter);
             }
             else
             {
                 Debug.LogWarning($"Letter '{c}' not found in LetterDatabase!");
             }
-        }
+        }        
+        
+        // Step 2: Spawn fake letters
+        SpawnFakeLetters(word.fakeLettersToSpawn, lettersToSpawn, availableSpots);
+    }
 
-        // Step 2: Spawn correct letters and update UI
-        foreach (LetterDataSO letter in lettersToSpawn)
-        {
-            if (availableSpots.Count == 0)
-            {
-                Debug.LogWarning("No available spawn points left!");
-                return;
-            }
-
-            int index = UnityEngine.Random.Range(0, availableSpots.Count);
-            Transform spawnPoint = availableSpots[index];
-            availableSpots.RemoveAt(index);
-
-            GameObject letterGO = Instantiate(letterPrefab, spawnPoint.position, Quaternion.identity);
-            CollectibleLetter collectible = letterGO.GetComponent<CollectibleLetter>();
-            collectible.letterData = letter;
-
-            // ?? Send this letter to UIManager to create a letter slot in the word UI
-            UIManager.Instance.AddLetterToWordUI(letter);
-        }
-
-        // Step 3: Spawn fake (wrong) letters
-        int wrongLetterAmountToSpawn = word.fakeLettersToSpawn;
-
+    private void SpawnFakeLetters(int wrongLetterAmountToSpawn, List<LetterDataSO> correctLetters, List<Transform> availableSpots)
+    {
         var wrongLetters = allLetters.letterSOs
-            .Where(l => !lettersToSpawn.Contains(l))
+            .Where(l => !correctLetters.Contains(l))
             .ToList();
 
         if (wrongLetters.Count < wrongLetterAmountToSpawn)
@@ -121,6 +119,11 @@ public class SpawnManager : MonoBehaviour
     private void ClearPreviousLetters()
     {
         GameObject[] existingLetters = GameObject.FindGameObjectsWithTag("Letter");
+        if (existingLetters.Length == 0)
+        {
+            Debug.Log("array empty");
+            return;
+        }
         foreach (GameObject obj in existingLetters)
         {
             Destroy(obj);

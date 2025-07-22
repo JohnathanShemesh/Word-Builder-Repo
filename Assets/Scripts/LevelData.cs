@@ -6,6 +6,5 @@ using UnityEngine;
     public class LevelData : ScriptableObject
     {
         public List<WordData> wordData = new List<WordData>();
-        public int fakeLettersToSpawn = 3; 
     }
 

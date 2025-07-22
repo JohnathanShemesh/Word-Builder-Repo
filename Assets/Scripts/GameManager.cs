@@ -11,17 +11,11 @@ public class GameManager : MonoBehaviour
     [Header("Level System")]
     public LevelDatabase levelDatabase;
     private LevelData currentLevel;
-    public Healthbar healthBar;
-    public GameOverManager gameOverManager;
     public int currentLevelIndex = 0;
     public int currentWordIndex = 0;
 
     [Header("Letter Spawn Settings")]
     public GameObject letterPrefab;
-    public Transform[] letterSpawnPoints;
-    public Transform[] usedLetterSpawnPoints;
-    public Image currentDisplayedWord;
-    public Image successImage;
     public Transform startingLocation;
     public GameObject Player;
     public LetterDataBaseSO lettersDataBaseRef;
@@ -50,10 +44,13 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
+        PlayerProgress playerProgress = PlayerProgress.Instance;
+         Player.transform.position = startingLocation.position;
         Debug.Log("Game started!");
         startingLocation.transform.position = Player.transform.position;
-        successImage.enabled = false;
-        GetNewLevel(currentLevelIndex, currentWordIndex);
+        currentLevelIndex = playerProgress.GetCurrentLevel();
+        currentWordIndex = playerProgress.GetCurrentWord();
+        SetLevel(playerProgress.GetCurrentLevel(), playerProgress.GetCurrentWord());
     }
 
     public void LoseLife()
@@ -63,12 +60,15 @@ public class GameManager : MonoBehaviour
         if (playerLives <= 0)
         {
             Debug.Log("Game Over");
-            gameOverManager.ShowGameOver();
+            UIManager.Instance.ShowGameOver();
         }
     }
 
-    public void GetNewLevel(int levelIndex, int wordIndex)
+    public void SetLevel(int levelIndex, int wordIndex)
     {
+        PlayerProgress playerProgress = PlayerProgress.Instance;
+        playerProgress.SetProgress(levelIndex, wordIndex);
+
         LevelData level = levelDatabase.GetLevel(levelIndex);
 
         if (wordIndex < 0 || wordIndex >= level.wordData.Count)
@@ -93,7 +93,7 @@ public class GameManager : MonoBehaviour
 
         SpawnManager.Instance.SpawnLetters(currentWordData);
     }
-
+    //makes a list of strings out of the current word
     public void InitializeWordLetters(string word)
     {
         currentWordLetters = new List<string>();
@@ -136,8 +136,15 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    private void OnWordCompleted()
+    private void OnWordCompleted()//add updates to player progress
     {
+        StartCoroutine(OnWordCompletedRoutine());
+    }
+
+    private IEnumerator OnWordCompletedRoutine()
+    {
+        yield return new WaitForSeconds(0.7f); // Add a 1-second delay
+
         currentWordIndex++;
         LevelData currentLevel = levelDatabase.GetLevel(currentLevelIndex);
 
@@ -150,12 +157,12 @@ public class GameManager : MonoBehaviour
             {
                 Debug.Log("No more levels!");
                 // Trigger end screen or game finish state
-                return;
+                yield break;
             }
         }
 
         Player.transform.position = startingLocation.position;
         UIManager.Instance.UpdateHearts(3);
-        GetNewLevel(currentLevelIndex, currentWordIndex);
+        SetLevel(currentLevelIndex, currentWordIndex);
     }
 }
