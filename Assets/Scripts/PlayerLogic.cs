@@ -4,9 +4,12 @@ using UnityEngine;
 
 public class PlayerLogic : MonoBehaviour
 {
+    public static PlayerLogic Instance;
+
+
     public float moveSpeed = 5f;
     public float jumpForce = 10f;
-    //add life and word progress
+    public int playerLives = 3;
     private Rigidbody2D rb;
     public Animator animator;
     public Transform raycastOrigin;
@@ -16,7 +19,21 @@ public class PlayerLogic : MonoBehaviour
     private bool isGrounded;
     private Vector2 originalColliderSize;
     private Vector2 originalColliderOffset;
+    void Awake()
+    {
+        Debug.Log("UIManager Awake called");
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+        }
+       
 
+    }
     void Start()
     {            
         boxCollider = GetComponent<BoxCollider2D>();
@@ -25,7 +42,7 @@ public class PlayerLogic : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         if (raycastOrigin == null)
-            Debug.LogError("raycastOrigin לא הוגדר!");
+            Debug.LogError("raycastOrigin not found!");
     }
 
     void Update()
@@ -97,4 +114,64 @@ public class PlayerLogic : MonoBehaviour
 
 
 
+    private List<string> currentWordLetters = new();  // List to track remaining letters
+
+    public void InitializeWordLetters(string word)
+    {
+        currentWordLetters = new List<string>();
+        foreach (char c in word)
+        {
+            currentWordLetters.Add(c.ToString().ToUpper());
+        }
+
+        Debug.Log("Initialized word letters:");
+        foreach (var letter in currentWordLetters)
+        {
+            Debug.Log(letter);
+        }
+    }
+
+    public bool CollectLetterSprite(LetterDataSO collectedLetter)
+    {
+        string letterName = collectedLetter.letterName.ToUpper().Trim();
+
+        Debug.Log($"Trying to collect letter: '{letterName}'");
+
+        if (!currentWordLetters.Contains(letterName))
+        {
+            Debug.LogWarning($"Letter '{letterName}' is NOT in the remaining word letters!");
+            LoseLife();
+            return false;
+        }
+
+        // Remove the first matching instance of the letter
+        currentWordLetters.Remove(letterName);
+        UIManager.Instance.RevealLetter(letterName);
+        Debug.Log($"Collected letter '{letterName}'. Remaining: {currentWordLetters.Count}");
+
+        if (currentWordLetters.Count == 0)
+        {
+            Debug.Log("Word completed!");
+            GameManager.Instance.OnWordCompleted();
+        }
+
+        return true;
+    }
+
+    public void LoseLife()
+    {
+        playerLives--;
+        UIManager.Instance.UpdateHearts(playerLives);
+        if (playerLives <= 0)
+        {
+            Debug.Log("Game Over");
+            UIManager.Instance.ShowGameOver();
+        }
+    }
+
+    public void ResetLives()
+    {
+        playerLives = 3;
+        UIManager.Instance.UpdateHearts(playerLives);
+    }
 }

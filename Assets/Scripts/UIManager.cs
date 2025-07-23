@@ -26,6 +26,7 @@ public class UIManager : MonoBehaviour
     public GameObject gameOverImage;
     public PlayerLogic player;
 
+    PlayerLogic PlayerLogic;
     void Awake()
     {
         Debug.Log("UIManager Awake called");
@@ -43,6 +44,7 @@ public class UIManager : MonoBehaviour
         {
             gameOverPanel.SetActive(false);
         }
+        
     }
 
     public Dictionary<string, Vector3> GetLetterWorldPositionDictionary()
@@ -97,7 +99,7 @@ public class UIManager : MonoBehaviour
             else
                 hearts[i].sprite = emptyHeart;
         }
-        GameManager.Instance.playerLives = lives;
+        PlayerLogic.Instance.playerLives = lives;
     }
 
     public void ClearWordUI()
@@ -133,7 +135,7 @@ public class UIManager : MonoBehaviour
         gameOverImage.SetActive(false);
 
         // Reset hearts
-        GameManager.Instance.playerLives = 3;
+        PlayerLogic.Instance.playerLives = 3;
         UpdateHearts(3);
 
         // Clear existing word UI

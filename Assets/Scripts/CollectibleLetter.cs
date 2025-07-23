@@ -7,6 +7,8 @@ public class CollectibleLetter : MonoBehaviour
     public LetterDataSO letterData;
     private bool collected = false;
     private Dictionary<string, Vector3> letterToWorldPositionMap = new();
+    private PlayerLogic playerLogic;
+
     private void Start()
     {
         if (letterData != null)
@@ -14,6 +16,7 @@ public class CollectibleLetter : MonoBehaviour
         else
             Debug.LogWarning("No letterData assigned to collectible letter!");
         letterToWorldPositionMap = UIManager.Instance.GetLetterWorldPositionDictionary();
+        playerLogic = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerLogic>();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -23,7 +26,7 @@ public class CollectibleLetter : MonoBehaviour
         {
             collected = true;
 
-            bool isCorrect = GameManager.Instance.CollectLetterSprite(letterData);
+            bool isCorrect = playerLogic.CollectLetterSprite(letterData);
 
             if (isCorrect)
                 StartCoroutine(MoveToWordImage());

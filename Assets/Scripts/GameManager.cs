@@ -5,8 +5,7 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    [Header("Player Stats")]
-    public int playerLives = 3;
+
 
     [Header("Level System")]
     public LevelDatabase levelDatabase;
@@ -15,12 +14,12 @@ public class GameManager : MonoBehaviour
     public int currentWordIndex = 0;
 
     [Header("Letter Spawn Settings")]
-    public GameObject letterPrefab;
-    public Transform startingLocation;
-    public GameObject Player;
+   
     public LetterDataBaseSO lettersDataBaseRef;
-
-    private List<string> currentWordLetters = new();  // New: List to track remaining letters
+ [Header("Player Info")]
+    private PlayerLogic playerLogic;
+     public Transform startingLocation;
+    public GameObject Player;
 
     public static GameManager Instance { get; private set; }
 
@@ -35,6 +34,7 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        playerLogic = Player.GetComponent<PlayerLogic>();
     }
 
     private void Start()
@@ -45,7 +45,7 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         PlayerProgress playerProgress = PlayerProgress.Instance;
-         Player.transform.position = startingLocation.position;
+        Player.transform.position = startingLocation.position;
         Debug.Log("Game started!");
         startingLocation.transform.position = Player.transform.position;
         currentLevelIndex = playerProgress.GetCurrentLevel();
@@ -53,16 +53,7 @@ public class GameManager : MonoBehaviour
         SetLevel(playerProgress.GetCurrentLevel(), playerProgress.GetCurrentWord());
     }
 
-    public void LoseLife()
-    {
-        playerLives--;
-        UIManager.Instance.UpdateHearts(playerLives);
-        if (playerLives <= 0)
-        {
-            Debug.Log("Game Over");
-            UIManager.Instance.ShowGameOver();
-        }
-    }
+
 
     public void SetLevel(int levelIndex, int wordIndex)
     {
@@ -79,7 +70,7 @@ public class GameManager : MonoBehaviour
 
         WordData currentWordData = level.wordData[wordIndex];
         string word = currentWordData.wordName.ToUpper();
-        InitializeWordLetters(word);
+        playerLogic.InitializeWordLetters(word);
 
         List<LetterDataSO> lettersToSpawn = new();
         foreach (char c in word)
@@ -93,50 +84,8 @@ public class GameManager : MonoBehaviour
 
         SpawnManager.Instance.SpawnLetters(currentWordData);
     }
-    //makes a list of strings out of the current word
-    public void InitializeWordLetters(string word)
-    {
-        currentWordLetters = new List<string>();
-        foreach (char c in word)
-        {
-            currentWordLetters.Add(c.ToString().ToUpper());
-        }
 
-        Debug.Log("Initialized word letters:");
-        foreach (var letter in currentWordLetters)
-        {
-            Debug.Log(letter);
-        }
-    }
-
-    public bool CollectLetterSprite(LetterDataSO collectedLetter)
-    {
-        string letterName = collectedLetter.letterName.ToUpper().Trim();
-
-        Debug.Log($"Trying to collect letter: '{letterName}'");
-
-        if (!currentWordLetters.Contains(letterName))
-        {
-            Debug.LogWarning($"Letter '{letterName}' is NOT in the remaining word letters!");
-            LoseLife();
-            return false;
-        }
-
-        // Remove the first matching instance of the letter
-        currentWordLetters.Remove(letterName);
-        UIManager.Instance.RevealLetter(letterName);
-        Debug.Log($"Collected letter '{letterName}'. Remaining: {currentWordLetters.Count}");
-
-        if (currentWordLetters.Count == 0)
-        {
-            Debug.Log("Word completed!");
-            OnWordCompleted();
-        }
-
-        return true;
-    }
-
-    private void OnWordCompleted()//add updates to player progress
+    public void OnWordCompleted()//add updates to player progress
     {
         StartCoroutine(OnWordCompletedRoutine());
     }
@@ -162,7 +111,7 @@ public class GameManager : MonoBehaviour
         }
 
         Player.transform.position = startingLocation.position;
-        UIManager.Instance.UpdateHearts(3);
+        playerLogic.ResetLives();
         SetLevel(currentLevelIndex, currentWordIndex);
     }
 }
