@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class PlayerLogic : MonoBehaviour
@@ -19,9 +21,9 @@ public class PlayerLogic : MonoBehaviour
     private bool isGrounded;
     private Vector2 originalColliderSize;
     private Vector2 originalColliderOffset;
+    public float groundCheckOffset = 0.1f; // Add this at the top with your other public fields
     void Awake()
     {
-        Debug.Log("UIManager Awake called");
         if (Instance == null)
         {
             Instance = this;
@@ -47,6 +49,7 @@ public class PlayerLogic : MonoBehaviour
 
     void Update()
     {
+        Debug.Log("the player touches the ground: " + CheckGrounded());
         float moveInput = Input.GetAxisRaw("Horizontal");
         rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
         animator.SetFloat("Speed",Mathf.Abs(rb.velocity.x));
@@ -59,24 +62,13 @@ public class PlayerLogic : MonoBehaviour
             gameObject.transform.localScale = new Vector3(1, 1, 1);
         }
 
-        Vector2 boxSize = new Vector2(boxCollider.size.x * 0.9f, 0.05f);
-        RaycastHit2D hit = Physics2D.BoxCast(boxCollider.bounds.center, boxSize, 0f, Vector2.down, rayLength, groundLayer);
-
-        if (hit.collider != null)
-        {
-            isGrounded = true;
-        }
-        else
-        {
-            isGrounded = false;
-        }
-
-        if (Input.GetButtonDown("Jump") && isGrounded)
-        {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-        }
-        bool isCrouching = isGrounded && Input.GetKey(KeyCode.S);
-        if (isGrounded && Input.GetKey(KeyCode.S))
+        
+        if (Input.GetButtonDown("Jump") && CheckGrounded())
+            {
+                rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            }
+        bool isCrouching = CheckGrounded() && Input.GetKey(KeyCode.S);
+        if (isCrouching)
         {
             Crouch(isCrouching);
             animator.SetBool("IsCrouching", true);
@@ -87,7 +79,27 @@ public class PlayerLogic : MonoBehaviour
             animator.SetBool("IsCrouching", false);
         }
     }
-    
+
+    private bool CheckGrounded()
+    {
+        Vector2 boxSize = new Vector2(boxCollider.size.x * 0.9f, 0.05f);
+        // Move the box center down by (half the collider height + groundCheckOffset)
+        Vector3 boxCenter = boxCollider.bounds.center + Vector3.down * (boxCollider.bounds.extents.y + groundCheckOffset);
+        RaycastHit2D hit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, rayLength, groundLayer);
+
+        if (hit.collider != null && hit.collider != boxCollider)
+        {
+            isGrounded = true;
+        }
+        else
+        {
+            isGrounded = false;
+        }
+
+        return isGrounded;
+        
+    }
+
     public void Crouch(bool isCrouching)
     {
         if (isCrouching)
@@ -108,7 +120,8 @@ public class PlayerLogic : MonoBehaviour
         {
             Gizmos.color = Color.red;
             Vector2 boxSize = new Vector2(boxCollider.size.x * 0.9f, 0.05f);
-            Gizmos.DrawWireCube(boxCollider.bounds.center + Vector3.down * rayLength, boxSize);
+            Vector3 boxCenter = boxCollider.bounds.center + Vector3.down * (boxCollider.bounds.extents.y + groundCheckOffset);
+            Gizmos.DrawWireCube(boxCenter, boxSize);
         }
     }
 

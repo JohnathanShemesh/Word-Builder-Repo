@@ -2292,14 +2292,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0f5f735587100442a29f77bfa9ec400, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerLives: 3
   levelDatabase: {fileID: 11400000, guid: 42f69c81d8a84834b925c9e696f21909, type: 2}
   currentLevelIndex: 0
   currentWordIndex: 0
-  letterPrefab: {fileID: 493701410083249662, guid: cacbdb8e28cfdaf45af618351affeeb6, type: 3}
+  lettersDataBaseRef: {fileID: 11400000, guid: 1ca90a619354a874c9d274e2d84b19c9, type: 2}
   startingLocation: {fileID: 537701474}
   Player: {fileID: 1622083073}
-  lettersDataBaseRef: {fileID: 11400000, guid: 1ca90a619354a874c9d274e2d84b19c9, type: 2}
 --- !u!4 &1562950525
 Transform:
   m_ObjectHideFlags: 0
@@ -2490,13 +2488,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 5
   jumpForce: 12
+  playerLives: 3
   animator: {fileID: 1622083079}
   raycastOrigin: {fileID: 1622083076}
   boxCollider: {fileID: 1622083074}
   rayLength: 0.5
   groundLayer:
     serializedVersion: 2
-    m_Bits: 72
+    m_Bits: 8
+  groundCheckOffset: 0.05
 --- !u!95 &1622083079
 Animator:
   serializedVersion: 5

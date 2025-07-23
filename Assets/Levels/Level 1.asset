@@ -15,4 +15,4 @@ MonoBehaviour:
   wordData:
   - {fileID: 11400000, guid: 3dd3239b72725c94b938f2e9f817ee8c, type: 2}
   - {fileID: 11400000, guid: 114207a0d5e25904db3c89be59635c7f, type: 2}
-  fakeLettersToSpawn: 3
+  - {fileID: 11400000, guid: 58c93d4a19f70c545ba425ce2b07e8c1, type: 2}

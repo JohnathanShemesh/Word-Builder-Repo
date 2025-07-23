@@ -14,4 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   wordData:
   - {fileID: 11400000, guid: a84aaadb57f5479498a2f8c1e6c85fb9, type: 2}
-  fakeLettersToSpawn: 3
+  - {fileID: 11400000, guid: 3f499ec704cb77b4aa04a642a6d70bec, type: 2}
+  - {fileID: 11400000, guid: a921b18367591f24ea43f79aad715146, type: 2}

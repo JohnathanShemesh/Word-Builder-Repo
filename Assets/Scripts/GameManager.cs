@@ -16,7 +16,8 @@ public class GameManager : MonoBehaviour
     [Header("Letter Spawn Settings")]
    
     public LetterDataBaseSO lettersDataBaseRef;
- [Header("Player Info")]
+
+    [Header("Player Info")]
     private PlayerLogic playerLogic;
      public Transform startingLocation;
     public GameObject Player;
