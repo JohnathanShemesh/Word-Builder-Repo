@@ -2257,7 +2257,7 @@ Transform:
   m_GameObject: {fileID: 1462701189}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10.696169, y: -3.408651, z: -0.21631554}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2293,8 +2293,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelDatabase: {fileID: 11400000, guid: 42f69c81d8a84834b925c9e696f21909, type: 2}
-  currentLevelIndex: 0
-  currentWordIndex: 0
   lettersDataBaseRef: {fileID: 11400000, guid: 1ca90a619354a874c9d274e2d84b19c9, type: 2}
   startingLocation: {fileID: 537701474}
   Player: {fileID: 1622083073}
@@ -3240,7 +3238,7 @@ Transform:
   m_GameObject: {fileID: 1982482644}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.402004, y: -0.41732466, z: -0.19873464}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -10,8 +10,7 @@ public class GameManager : MonoBehaviour
     [Header("Level System")]
     public LevelDatabase levelDatabase;
     private LevelData currentLevel;
-    public int currentLevelIndex = 0;
-    public int currentWordIndex = 0;
+
 
     [Header("Letter Spawn Settings")]
    
@@ -49,18 +48,15 @@ public class GameManager : MonoBehaviour
         Player.transform.position = startingLocation.position;
         Debug.Log("Game started!");
         startingLocation.transform.position = Player.transform.position;
-        currentLevelIndex = playerProgress.GetCurrentLevel();
-        currentWordIndex = playerProgress.GetCurrentWord();
-        SetLevel(playerProgress.GetCurrentLevel(), playerProgress.GetCurrentWord());
+        SetLevel();
     }
 
 
 
-    public void SetLevel(int levelIndex, int wordIndex)
+    public void SetLevel()
     {
-        PlayerProgress playerProgress = PlayerProgress.Instance;
-        playerProgress.SetProgress(levelIndex, wordIndex);
-
+        int levelIndex = PlayerProgress.Instance.GetCurrentLevel();
+        int wordIndex = PlayerProgress.Instance.GetCurrentWord();
         LevelData level = levelDatabase.GetLevel(levelIndex);
 
         if (wordIndex < 0 || wordIndex >= level.wordData.Count)
@@ -93,17 +89,19 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator OnWordCompletedRoutine()
     {
+        int level = PlayerProgress.Instance.GetCurrentLevel();
+        int word = PlayerProgress.Instance.GetCurrentWord();
+        word++;
         yield return new WaitForSeconds(0.7f); // Add a 1-second delay
 
-        currentWordIndex++;
-        LevelData currentLevel = levelDatabase.GetLevel(currentLevelIndex);
-
-        if (currentWordIndex >= currentLevel.wordData.Count)
+        LevelData currentLevel = levelDatabase.GetLevel(level);
+        PlayerProgress.Instance.SetCurrentWord(word);
+        if (word >= currentLevel.wordData.Count)
         {
-            currentLevelIndex++;
-            currentWordIndex = 0;
-
-            if (currentLevelIndex >= levelDatabase.levels.Count)
+            level++;
+            PlayerProgress.Instance.SetCurrentLevel(level);
+            PlayerProgress.Instance.SetCurrentWord(0);
+            if (level >= levelDatabase.levels.Count)
             {
                 Debug.Log("No more levels!");
                 // Trigger end screen or game finish state
@@ -113,6 +111,7 @@ public class GameManager : MonoBehaviour
 
         Player.transform.position = startingLocation.position;
         playerLogic.ResetLives();
-        SetLevel(currentLevelIndex, currentWordIndex);
+        PlayerProgress.Instance.SaveProgress();
+        SetLevel();
     }
 }

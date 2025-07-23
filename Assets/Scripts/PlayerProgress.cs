@@ -7,8 +7,7 @@ public class PlayerProgress : MonoBehaviour
     private int currentLevel;
     private int currentWord;
 
-    private const string LevelKey = "CurrentLevel";
-    private const string WordKey = "CurrentWord";
+    private const string SaveKey = "PlayerSavedData";
 
     void Awake()
     {
@@ -16,42 +15,71 @@ public class PlayerProgress : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            LoadProgress(); // Load saved values
         }
         else if (Instance != this)
         {
             Destroy(gameObject);
         }
     }
-
+    private void Start()
+    {
+        LoadProgress();
+    }
     public int GetCurrentLevel() => currentLevel;
     public int GetCurrentWord() => currentWord;
-
-    public void SetProgress(int level, int word)
+    public int SetCurrentLevel(int level) => currentLevel = level;
+    public int SetCurrentWord(int word) => currentWord = word;
+    public void SaveProgress()
     {
-        currentLevel = level;
-        currentWord = word;
-
-        PlayerPrefs.SetInt(LevelKey, currentLevel);
-        PlayerPrefs.SetInt(WordKey, currentWord);
+        SaveData data = new SaveData
+        {
+            level = GetCurrentLevel(),
+            word = GetCurrentWord()
+        };
+        string json = JsonUtility.ToJson(data);
+        PlayerPrefs.SetString(SaveKey, json);
         PlayerPrefs.Save();
+        Debug.Log("the progress is saved");
     }
 
     private void LoadProgress()
     {
-        currentLevel = PlayerPrefs.GetInt(LevelKey, 0);
-        currentWord = PlayerPrefs.GetInt(WordKey, 0);
-        Debug.Log($"[PlayerProgress] Loaded progress: Level {currentLevel}, Word {currentWord}");
+        if (PlayerPrefs.HasKey(SaveKey))
+        {
+            string json = PlayerPrefs.GetString(SaveKey);
+            SaveData saveData = JsonUtility.FromJson<SaveData>(json);
+            if(saveData != null)
+            {
+                currentLevel = saveData.level;
+                currentWord = saveData.word;
+                Debug.Log($"[PlayerProgress] Loaded progress: Level {currentLevel}, Word {currentWord}");
+            }
+            else
+            {
+                Debug.Log("failed to load playerprefs save data");
+            }
+        }
+        else
+        {
+            Debug.Log("no save found in player progress");
+        }
+        
     }
 
     public void ResetProgress()
     {
-        currentLevel = 0;
-        currentWord = 0;
-        PlayerPrefs.SetInt(LevelKey, currentLevel);
-        PlayerPrefs.SetInt(WordKey, currentWord);
-        PlayerPrefs.Save();
-        Debug.Log("[PlayerProgress] Progress reset to 0");
+        if (PlayerPrefs.HasKey(SaveKey))
+        {
+            PlayerPrefs.DeleteKey(SaveKey);
+            PlayerPrefs.Save();
+            Debug.Log("save data is deleted from playerprefs");
+        }
+        else
+        {
+            Debug.Log("no save data found to delete");
+
+        }
+        
     }
 
     [ContextMenu("Reset Progress")]
